@@ -145,6 +145,23 @@ export function EnglishHomeClient() {
                   </span>
                 ))}
               </div>
+              {index === 0 ? (
+                <button
+                  className="mt-6 min-h-12 w-full rounded-md border border-white/[0.08] bg-[#07111f] px-4 py-3 text-sm font-semibold text-slate-500"
+                  disabled
+                  type="button"
+                >
+                  Coming soon
+                </button>
+              ) : (
+                <Link
+                  className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-gold px-4 py-3 text-sm font-semibold text-[#08101d]"
+                  href="/en/bazi/form"
+                >
+                  Start BaZi Reading
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </Card>
           );
         })}
