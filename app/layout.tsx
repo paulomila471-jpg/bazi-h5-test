@@ -6,7 +6,7 @@ import { TestVersionNotice } from "@/components/TestVersionNotice";
 
 export const metadata: Metadata = {
   title: "东方命理 AI 咨询",
-  description: "八字命理板块 MVP"
+  description: "八字命理 H5 测试版"
 };
 
 export const viewport: Viewport = {
