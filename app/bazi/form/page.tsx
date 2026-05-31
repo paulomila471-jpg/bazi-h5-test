@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { ComplianceNotice } from "@/components/ComplianceNotice";
 import { Card, FieldLabel, PrimaryButton, fieldClass } from "@/components/ui";
 import { calculateBazi } from "@/lib/bazi/calculateBazi";
+import { buildBaziAnalysis } from "@/lib/bazi/core/buildBaziAnalysis";
 import type {
   BaziFocus,
   BaziFormData,
@@ -70,6 +71,7 @@ export default function BaziFormPage() {
 
     try {
       window.localStorage.setItem("bazi_latest_report", JSON.stringify(record));
+      window.localStorage.setItem("bazi_analysis_data", JSON.stringify({ record, analysis: buildBaziAnalysis({ birthInfo: form, focus: form.focus, locale: "zh", pillars: chart }) }));
       await saveReport(record);
       router.push("/bazi/result");
     } catch (error) {
