@@ -7,16 +7,30 @@ import { Card, PrimaryButton } from "@/components/ui";
 import { detectBaziIntent } from "@/lib/bazi/intent";
 import { wechatId } from "@/lib/compliance/config";
 
-const examples = ["我想看一生命运", "我今年财运怎么样", "我适合做什么行业", "我的婚姻怎么样"];
+const examples = [
+  "我想看一生命运",
+  "我今年财运怎么样",
+  "我适合做什么行业",
+  "我的婚姻怎么样"
+];
 
 export default function HomePage() {
   const router = useRouter();
   const [question, setQuestion] = useState("");
 
   function startAnalysis() {
-    const result = detectBaziIntent(question);
-    window.localStorage.setItem("bazi_question", question.trim());
-    window.localStorage.setItem("bazi_intent", JSON.stringify(result));
+    const trimmed = question.trim();
+    const result = detectBaziIntent(trimmed);
+
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("bazi_question", trimmed);
+        window.localStorage.setItem("bazi_intent", JSON.stringify(result));
+      } catch (error) {
+        console.error("Failed to save bazi question:", error);
+      }
+    }
+
     router.push("/recommend");
   }
 
@@ -58,6 +72,7 @@ export default function HomePage() {
           开始分析
         </PrimaryButton>
       </Card>
+
       <Card className="mt-4">
         <p className="text-sm leading-7 text-[#efe2c4]">
           添加微信 <span className="font-semibold text-gold">{wechatId}</span> 获取人工深度版。
