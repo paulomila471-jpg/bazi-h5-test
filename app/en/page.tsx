@@ -1,7 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight, Mail, MessageCircle, Sparkles, Stars } from "lucide-react";
 import { Card } from "@/components/ui";
 import { wechatId } from "@/lib/compliance/config";
+
+export const metadata: Metadata = {
+  title: "Eastern Destiny & Divination Reading",
+  description: "Early-access Eastern divination and BaZi destiny readings for overseas users."
+};
 
 const products = [
   {
