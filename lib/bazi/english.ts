@@ -83,12 +83,20 @@ export function translateStem(stem: string) {
   return stems[stem] || stem;
 }
 
+export function translateBranch(branch: string) {
+  return branches[branch] || branch;
+}
+
 export function translateTenGod(tenGod: string) {
   return tenGods[tenGod] || "Life Theme";
 }
 
 export function formatPillar(pillar: Pick<Pillar, "stem" | "branch">) {
-  return `${translateStem(pillar.stem)} ${branches[pillar.branch] || pillar.branch}`;
+  return `${translateStem(pillar.stem)} ${translateBranch(pillar.branch)}`;
+}
+
+export function translateYearTag(tag: string) {
+  return yearTags[tag] || "Key Year";
 }
 
 function translateLevel(level: AnnualHighlight["level"]) {
@@ -143,7 +151,7 @@ export function translateAnnualHighlight(item: AnnualHighlight) {
   const base = {
     year: item.year,
     pillar: formatPillar({ stem: item.annualPillar.slice(0, 1), branch: item.annualPillar.slice(1, 2) }),
-    tag: yearTags[item.tag] || "Key Year",
+    tag: translateYearTag(item.tag),
     level: translateLevel(item.level)
   };
 
@@ -227,6 +235,8 @@ export function createEnglishRelationshipSummary(relationship: RelationshipProfi
   const score = relationship.peachBlossomScore;
   return {
     peachType: score >= 78 ? "strong romantic attraction" : score >= 62 ? "good social and romantic visibility" : score >= 48 ? "moderate attraction with slow development" : "slow-burning relationship pattern",
+    spouseProfile:
+      "A suitable partner is likely to value stability, emotional steadiness, and practical planning. The exact profile should be read together with the Day Branch and relationship timing.",
     suitablePartners: score >= 62
       ? ["emotionally stable", "long-term minded", "clear with boundaries", "practical and reliable"]
       : ["patient", "consistent", "respectful of personal rhythm", "willing to build trust slowly"],
