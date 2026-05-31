@@ -19,6 +19,15 @@ export function getBeianInfo() {
   };
 }
 
+export function getEnglishDeliveryConfig() {
+  return {
+    koFiUrl: process.env.NEXT_PUBLIC_KO_FI_URL || "",
+    gumroadUrl: process.env.NEXT_PUBLIC_GUMROAD_URL || "",
+    paypalUrl: process.env.NEXT_PUBLIC_PAYPAL_URL || "",
+    contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || ""
+  };
+}
+
 export function isPaymentEnabled() {
   return false;
 }
