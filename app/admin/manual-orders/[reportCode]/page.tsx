@@ -2,28 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { AdminGate } from "@/components/AdminGate";
 import { Card, PrimaryButton } from "@/components/ui";
-import { generateAnnualHighlights } from "@/lib/bazi/rules/annualHighlights";
-import { generateLuckCycles } from "@/lib/bazi/rules/luckCycles";
-import { generateProfessionalView } from "@/lib/bazi/rules/professionalView";
-import { generateRelationshipProfile } from "@/lib/bazi/rules/relationshipProfile";
 import {
   buildFullManualReport,
   getManualOrder,
   getManualStatusLabel,
+  regenerateManualOrderReport,
   updateManualOrderStatus,
   type ManualOrderRecord,
   type ManualOrderStatus
 } from "@/lib/manualOrders";
-
-type ManualOrderDetail = {
-  annualHighlights: ReturnType<typeof generateAnnualHighlights>;
-  luckCycles: ReturnType<typeof generateLuckCycles>;
-  relationship: ReturnType<typeof generateRelationshipProfile>;
-  professionalView: string;
-  fullReport: string;
-};
 
 function PillarLine({ label, value }: { label: string; value: string }) {
   return (
@@ -39,37 +27,25 @@ export default function ManualOrderDetailPage() {
   const [order, setOrder] = useState<ManualOrderRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState("");
+  const [regenerating, setRegenerating] = useState(false);
 
   useEffect(() => {
-    getManualOrder(decodeURIComponent(params.reportCode)).then((item) => {
-      setOrder(item);
-      setLoading(false);
-    });
+    getManualOrder(decodeURIComponent(params.reportCode))
+      .then((item) => setOrder(item))
+      .catch((error) => {
+        console.error("Failed to load manual order:", error);
+        setOrder(null);
+      })
+      .finally(() => setLoading(false));
   }, [params.reportCode]);
 
-  const detail = useMemo(() => {
-    if (!order) return null;
-    const annualHighlights =
-      order.annualHighlights ||
-      generateAnnualHighlights({
-        birthInfo: order,
-        focus: order.focus,
-        pillars: order.pillars
-      });
-    const luckCycles = order.luckCycles || generateLuckCycles({ form: order, pillars: order.pillars, count: 6 });
-    const relationship =
-      order.relationshipProfile ||
-      generateRelationshipProfile({
-        form: order,
-        pillars: order.pillars,
-        annualHighlights
-      });
-    const professionalView = order.professionalView || generateProfessionalView({ form: order, pillars: order.pillars });
-    const fullReport = order.fullReport || buildFullManualReport(order);
-    return { annualHighlights, luckCycles, relationship, professionalView, fullReport };
+  const fullReport = useMemo(() => {
+    if (!order) return "";
+    return order.fullReport || buildFullManualReport(order);
   }, [order]);
 
   async function copyText(text: string, label: string) {
+    if (!navigator.clipboard) return;
     await navigator.clipboard.writeText(text);
     setCopied(label);
     window.setTimeout(() => setCopied(""), 1400);
@@ -81,46 +57,34 @@ export default function ManualOrderDetailPage() {
     if (updated) setOrder(updated);
   }
 
-  return (
-    <AdminGate>
-      {loading ? (
-        <div className="page-shell pt-8">
-          <Card>
-            <p className="text-sm text-slate-300">正在读取订单详情...</p>
-          </Card>
-        </div>
-      ) : !order || !detail ? (
-        <div className="page-shell pt-8">
-          <Card>
-            <p className="text-sm text-slate-300">未找到该报告编号。</p>
-          </Card>
-        </div>
-      ) : (
-        <ManualOrderDetailContent
-          copied={copied}
-          detail={detail}
-          onCopy={copyText}
-          onSetStatus={setStatus}
-          order={order}
-        />
-      )}
-    </AdminGate>
-  );
-}
+  async function regenerate() {
+    if (!order?.reportCode) return;
+    setRegenerating(true);
+    const updated = await regenerateManualOrderReport(order.reportCode);
+    if (updated) setOrder(updated);
+    setRegenerating(false);
+  }
 
-function ManualOrderDetailContent({
-  order,
-  detail,
-  copied,
-  onCopy,
-  onSetStatus
-}: {
-  order: ManualOrderRecord;
-  detail: ManualOrderDetail;
-  copied: string;
-  onCopy: (text: string, label: string) => Promise<void>;
-  onSetStatus: (status: ManualOrderStatus) => Promise<void>;
-}) {
+  if (loading) {
+    return (
+      <div className="page-shell pt-8">
+        <Card>
+          <p className="text-sm text-slate-300">正在读取订单详情...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="page-shell pt-8">
+        <Card>
+          <p className="text-sm text-slate-300">未找到该报告编号。</p>
+        </Card>
+      </div>
+    );
+  }
+
   const chart = order.pillars;
 
   return (
@@ -161,74 +125,43 @@ function ManualOrderDetailContent({
       </Card>
 
       <Card className="mb-4">
-        <h2 className="mb-3 text-base font-semibold text-[#fff7e8]">免费预览内容</h2>
-        <p className="whitespace-pre-line text-sm leading-7 text-slate-300">{order.report}</p>
-      </Card>
-
-      <Card className="mb-4">
-        <h2 className="mb-3 text-base font-semibold text-[#fff7e8]">关键年份详细解释</h2>
-        <div className="space-y-3">
-          {detail.annualHighlights.map((item) => (
-            <div className="rounded-md border border-white/[0.08] bg-[#07111f]/70 p-3" key={item.year}>
-              <p className="text-sm font-semibold text-gold">
-                {item.year} {item.annualPillar}年：{item.tag}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-slate-300">{item.description}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <Card className="mb-4">
-        <h2 className="mb-3 text-base font-semibold text-[#fff7e8]">十年大运</h2>
-        <div className="space-y-3">
-          {detail.luckCycles.map((cycle) => (
-            <div className="rounded-md border border-white/[0.08] bg-[#07111f]/70 p-3" key={`${cycle.ageRange}-${cycle.pillar}`}>
-              <p className="text-sm font-semibold text-gold">
-                {cycle.ageRange}｜{cycle.pillar}｜{cycle.tenGod}｜{cycle.tag}｜{cycle.score}分
-              </p>
-              <p className="mt-2 text-sm leading-6 text-slate-300">事业：{cycle.career}</p>
-              <p className="text-sm leading-6 text-slate-300">财运：{cycle.wealth}</p>
-              <p className="text-sm leading-6 text-slate-300">感情：{cycle.love}</p>
-              <p className="text-sm leading-6 text-slate-400">风险：{cycle.risk}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <Card className="mb-4">
-        <h2 className="mb-3 text-base font-semibold text-[#fff7e8]">感情画像 / 配偶画像 / 适配对象</h2>
-        <div className="space-y-3 text-sm leading-7 text-slate-300">
-          <p>桃花指数：{detail.relationship.peachBlossomScore}｜{detail.relationship.peachBlossomType}</p>
-          <p>配偶画像：{detail.relationship.spouseProfile.personality} {detail.relationship.spouseProfile.reality}</p>
-          <p>相处模式：{detail.relationship.spouseProfile.relationshipMode}</p>
-          <p>适配对象：{detail.relationship.suitablePartners.join("、")}</p>
-          <p>你吸引的人：{detail.relationship.attractedTypes.join("、")}</p>
-          <p>感情风险：{detail.relationship.relationshipRisk}</p>
-        </div>
-      </Card>
-
-      <Card className="mb-4">
-        <h2 className="mb-3 text-base font-semibold text-[#fff7e8]">命理师视角</h2>
-        <p className="whitespace-pre-line text-sm leading-7 text-slate-300">{detail.professionalView}</p>
-      </Card>
-
-      <Card className="mb-4">
         <h2 className="mb-3 text-base font-semibold text-[#fff7e8]">完整报告内容</h2>
-        <textarea
-          className="min-h-[520px] w-full rounded-md border border-gold/20 bg-[#07111f] p-3 text-sm leading-7 text-[#fff7e8] outline-none"
-          readOnly
-          value={detail.fullReport}
-        />
+        {fullReport.trim() ? (
+          <textarea
+            className="min-h-[560px] w-full rounded-md border border-gold/20 bg-[#07111f] p-3 text-sm leading-7 text-[#fff7e8] outline-none"
+            readOnly
+            value={fullReport}
+          />
+        ) : (
+          <div className="rounded-md border border-gold/20 bg-[#07111f] p-4">
+            <p className="text-sm leading-7 text-slate-300">完整报告未生成，可点击重新生成。</p>
+            <PrimaryButton className="mt-4" disabled={regenerating} onClick={regenerate} type="button">
+              {regenerating ? "正在重新生成..." : "重新生成完整报告"}
+            </PrimaryButton>
+          </div>
+        )}
+      </Card>
+
+      <Card className="mb-4">
+        <h2 className="mb-3 text-base font-semibold text-[#fff7e8]">结构化数据</h2>
+        <div className="space-y-3 text-sm leading-7 text-slate-300">
+          <p>关键年份：{order.annualHighlights?.map((item) => `${item.year}${item.annualPillar}年 ${item.tag}`).join("；") || "已在完整报告中生成"}</p>
+          <p>十年大运：{order.luckCycles?.map((item) => `${item.ageRange} ${item.pillar} ${item.tenGod}`).join("；") || "已在完整报告中生成"}</p>
+          <p>桃花指数：{order.relationshipProfile ? `${order.relationshipProfile.peachBlossomScore}｜${order.relationshipProfile.peachBlossomType}` : "已在完整报告中生成"}</p>
+          <p>命理师视角：{order.professionalView || "已在完整报告中生成"}</p>
+        </div>
       </Card>
 
       <Card>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <PrimaryButton onClick={() => onCopy(detail.fullReport, "完整报告")} type="button">复制完整报告</PrimaryButton>
-          <PrimaryButton onClick={() => onCopy(order.reportCode || "", "报告编号")} type="button">复制报告编号</PrimaryButton>
-          <PrimaryButton onClick={() => onSetStatus("paid")} type="button">标记已付款</PrimaryButton>
-          <PrimaryButton onClick={() => onSetStatus("sent")} type="button">标记已发送</PrimaryButton>
-          <PrimaryButton onClick={() => onSetStatus("cancelled")} type="button">标记无效</PrimaryButton>
+          <PrimaryButton onClick={() => copyText(fullReport, "完整报告")} type="button">复制完整报告</PrimaryButton>
+          <PrimaryButton onClick={() => copyText(order.reportCode || "", "报告编号")} type="button">复制报告编号</PrimaryButton>
+          <PrimaryButton onClick={() => setStatus("paid")} type="button">标记已付款</PrimaryButton>
+          <PrimaryButton onClick={() => setStatus("sent")} type="button">标记已发送</PrimaryButton>
+          <PrimaryButton onClick={() => setStatus("cancelled")} type="button">标记无效</PrimaryButton>
+          <PrimaryButton disabled={regenerating} onClick={regenerate} type="button">
+            {regenerating ? "正在重新生成..." : "重新生成完整报告"}
+          </PrimaryButton>
         </div>
         {copied ? <p className="mt-3 text-sm text-gold">已复制：{copied}</p> : null}
       </Card>
