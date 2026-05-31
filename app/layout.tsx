@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { BottomNav } from "@/components/BottomNav";
-import { SiteFooter } from "@/components/SiteFooter";
-import { TestVersionNotice } from "@/components/TestVersionNotice";
+import { AppChrome } from "@/components/AppChrome";
 
 export const metadata: Metadata = {
   title: "东方命理 AI 咨询",
@@ -23,10 +21,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
-        <TestVersionNotice />
-        <main className="mx-auto max-w-3xl">{children}</main>
-        <SiteFooter />
-        <BottomNav />
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   );
