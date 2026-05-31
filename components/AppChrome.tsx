@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TestVersionNotice } from "@/components/TestVersionNotice";
 
@@ -11,6 +12,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <LanguageSwitch />
       {isEnglish ? null : <TestVersionNotice />}
       <main className="mx-auto max-w-3xl">{children}</main>
       {isEnglish ? null : <SiteFooter />}
