@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Card, FieldLabel, PrimaryButton, fieldClass } from "@/components/ui";
-import { calculateBazi } from "@/lib/bazi/calculateBazi";
+import { buildBaziAnalysis } from "@/lib/bazi/core/buildBaziAnalysis";
 import {
   buildEnglishFreeReport,
   createEnglishReportId,
@@ -44,7 +44,7 @@ export default function EnglishBaziFormPage() {
       useTrueSolarTime: false,
       ziHourDayChangeRule: "after_23" as const
     };
-    const pillars = calculateBazi(baziForm);
+    const analysis = buildBaziAnalysis({ birthInfo: baziForm, focus: baziForm.focus, locale: "en" });
     const record = {
       ...baziForm,
       id: crypto.randomUUID(),
@@ -53,7 +53,7 @@ export default function EnglishBaziFormPage() {
       reportType: "english_bazi",
       reportCode: createEnglishReportId(),
       module: "bazi" as const,
-      pillars,
+      pillars: analysis.pillars,
       report: "",
       paymentStatus: "unpaid" as const,
       createdAt: new Date().toISOString()
@@ -62,6 +62,7 @@ export default function EnglishBaziFormPage() {
 
     try {
       window.localStorage.setItem("en_bazi_latest_report", JSON.stringify(finalRecord));
+      window.localStorage.setItem("bazi_analysis_data", JSON.stringify({ record: finalRecord, analysis }));
       router.push("/en/bazi/result");
     } catch (error) {
       console.error("Failed to save English BaZi report:", error);
