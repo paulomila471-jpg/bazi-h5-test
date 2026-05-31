@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+build/
+.turbo/
+.cache/
+
+.env
+.env.local
+.env.*.local
+
+*.log
+next-dev-*.log
+
+Thumbs.db
+.DS_Store

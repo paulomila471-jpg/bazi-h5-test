@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(217, 181, 108, 0.13), transparent 28%),
+    radial-gradient(circle at 90% 0%, rgba(71, 94, 128, 0.22), transparent 30%),
+    linear-gradient(180deg, #050b14 0%, #07111f 50%, #03070d 100%);
+  color: #f7ead0;
+  font-family: Arial, "Microsoft YaHei", sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.page-shell {
+  min-height: 100vh;
+  padding: 20px 16px 96px;
+}
+
+.gold-border {
+  border: 1px solid rgba(217, 181, 108, 0.24);
+}
