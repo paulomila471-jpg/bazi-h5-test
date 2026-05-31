@@ -12,5 +12,10 @@ export function getSupabaseClient() {
     return null;
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey);
+  try {
+    return createClient(supabaseUrl, supabaseAnonKey);
+  } catch (error) {
+    console.error("Supabase client init failed:", error);
+    return null;
+  }
 }
