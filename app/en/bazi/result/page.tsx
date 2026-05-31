@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CreditCard, Heart, Lock, X } from "lucide-react";
+import { Heart, Lock, X } from "lucide-react";
 import { Card, PrimaryButton } from "@/components/ui";
+import { buildBaziAnalysis } from "@/lib/bazi/core/buildBaziAnalysis";
 import {
   baziFocusToEnglish,
   buildEnglishFullReport,
@@ -16,10 +17,6 @@ import {
   translateStem,
   translateTenGod
 } from "@/lib/bazi/english";
-import { generateAnnualHighlights } from "@/lib/bazi/rules/annualHighlights";
-import { generateLuckCycles } from "@/lib/bazi/rules/luckCycles";
-import { generateProfessionalView } from "@/lib/bazi/rules/professionalView";
-import { generateRelationshipProfile } from "@/lib/bazi/rules/relationshipProfile";
 import type { BaziReportRecord, Pillar } from "@/lib/bazi/types";
 import { getEnglishDeliveryConfig } from "@/lib/compliance/config";
 
@@ -51,9 +48,13 @@ function isValidRecord(value: unknown): value is BaziReportRecord {
 function safeReadEnglishReport() {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem("en_bazi_latest_report");
+    const raw =
+      window.localStorage.getItem("en_bazi_latest_report") ||
+      window.localStorage.getItem("bazi_latest_report") ||
+      window.localStorage.getItem("bazi_analysis_data");
     if (!raw) return null;
     const parsed = JSON.parse(raw);
+    if (isValidRecord(parsed?.record)) return parsed.record;
     return isValidRecord(parsed) ? parsed : null;
   } catch (error) {
     console.error("Failed to parse en_bazi_latest_report:", error);
@@ -118,7 +119,13 @@ function PillarCard({ label, pillar, isDay }: { label: string; pillar: Pillar; i
   );
 }
 
-function UnlockModal({ reportId, onClose }: { reportId: string; onClose: () => void }) {
+function UnlockModal({
+  reportId,
+  onClose
+}: {
+  reportId: string;
+  onClose: () => void;
+}) {
   const { koFiUrl, gumroadUrl, paypalUrl, contactEmail } = getEnglishDeliveryConfig();
   const mailHref = contactEmail
     ? `mailto:${contactEmail}?subject=${encodeURIComponent(`BaZi Report ${reportId}`)}`
@@ -183,10 +190,11 @@ export default function EnglishBaziResultPage() {
   const derived = useMemo(() => {
     if (!record) return null;
     try {
-      const annualHighlights = generateAnnualHighlights({ birthInfo: record, focus: record.focus, pillars: record.pillars });
-      const relationship = generateRelationshipProfile({ form: record, pillars: record.pillars, annualHighlights });
-      const luckCycles = generateLuckCycles({ form: record, pillars: record.pillars, count: 6 });
-      const professionalView = generateProfessionalView({ form: record, pillars: record.pillars });
+      const analysis = buildBaziAnalysis({ birthInfo: record, focus: record.focus, locale: "en", pillars: record.pillars });
+      const annualHighlights = analysis.annualHighlights;
+      const relationship = analysis.relationshipProfile;
+      const luckCycles = analysis.luckCycles;
+      const professionalView = analysis.professionalView;
       const overview = createEnglishOverview(record.pillars, record.focus);
       const insights = createEnglishKeyInsights({ chart: record.pillars, focus: record.focus, annualHighlights, relationship }).slice(0, 3);
       const relationshipSummary = createEnglishRelationshipSummary(relationship);
