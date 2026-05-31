@@ -37,10 +37,14 @@ export default function BaziFormPage() {
   });
 
   useEffect(() => {
-    setForm((current) => ({
-      ...current,
-      question: window.localStorage.getItem("bazi_question") || ""
-    }));
+    try {
+      setForm((current) => ({
+        ...current,
+        question: window.localStorage.getItem("bazi_question") || ""
+      }));
+    } catch (error) {
+      console.error("Failed to read saved question:", error);
+    }
   }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -64,9 +68,14 @@ export default function BaziFormPage() {
       createdAt: new Date().toISOString()
     };
 
-    window.localStorage.setItem("bazi_latest_report", JSON.stringify(record));
-    await saveReport(record);
-    router.push("/bazi/result");
+    try {
+      window.localStorage.setItem("bazi_latest_report", JSON.stringify(record));
+      await saveReport(record);
+      router.push("/bazi/result");
+    } catch (error) {
+      console.error("Failed to save bazi report:", error);
+      setLoading(false);
+    }
   }
 
   return (
