@@ -17,8 +17,9 @@ export default function Error({
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 text-center">
       <h1 className="text-2xl font-semibold text-[#fff7e8]">页面加载异常，请刷新重试。</h1>
       <p className="mt-3 text-sm leading-7 text-slate-300">
-        如果多次刷新仍无法打开，请稍后再试或联系管理员。
+        可能是本机缓存数据不完整、浏览器存储异常，或页面运行时加载失败。请先刷新；如果仍异常，请返回首页重新填写。
       </p>
+      {error.digest ? <p className="mt-2 text-xs text-slate-500">错误编号：{error.digest}</p> : null}
       <button
         className="mt-6 min-h-12 rounded-md bg-gold px-4 text-sm font-semibold text-[#08101d]"
         onClick={reset}
