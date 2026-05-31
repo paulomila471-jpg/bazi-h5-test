@@ -4,10 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Copy, Heart, Lock, X } from "lucide-react";
 import { Card, PrimaryButton } from "@/components/ui";
+import { buildBaziAnalysis } from "@/lib/bazi/core/buildBaziAnalysis";
 import type { BaziReportRecord, Pillar } from "@/lib/bazi/types";
 import { createBaziOverview, getPillarMeta } from "@/lib/bazi/resultInsights";
-import { generateAnnualHighlights } from "@/lib/bazi/rules/annualHighlights";
-import { generateRelationshipProfile } from "@/lib/bazi/rules/relationshipProfile";
 import { complianceDisclaimer, wechatId } from "@/lib/compliance/config";
 import { createManualOrder } from "@/lib/manualOrders";
 import { saveGeneratedReport } from "@/lib/reports";
@@ -47,9 +46,13 @@ function isValidRecord(value: unknown): value is BaziReportRecord {
 function safeReadLatestReport() {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem("bazi_latest_report");
+    const raw =
+      window.localStorage.getItem("bazi_latest_report") ||
+      window.localStorage.getItem("en_bazi_latest_report") ||
+      window.localStorage.getItem("bazi_analysis_data");
     if (!raw) return null;
     const parsed = JSON.parse(raw);
+    if (isValidRecord(parsed?.record)) return parsed.record;
     return isValidRecord(parsed) ? parsed : null;
   } catch (error) {
     console.error("Failed to parse bazi_latest_report:", error);
@@ -195,10 +198,9 @@ export default function BaziResultPage() {
   const derived = useMemo(() => {
     if (!record) return null;
     try {
-      const timeline = generateAnnualHighlights({ birthInfo: record, focus: record.focus, pillars: record.pillars });
-      const relationship = generateRelationshipProfile({ form: record, pillars: record.pillars, annualHighlights: timeline });
+      const analysis = buildBaziAnalysis({ birthInfo: record, focus: record.focus, locale: "zh", pillars: record.pillars });
       const overview = createBaziOverview(record.pillars, record.focus);
-      return { timeline, relationship, overview };
+      return { analysis, timeline: analysis.annualHighlights, relationship: analysis.relationshipProfile, overview };
     } catch (error) {
       console.error("Failed to build bazi result view:", error);
       return null;
