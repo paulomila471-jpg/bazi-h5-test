@@ -17,6 +17,7 @@ create table if not exists public.manual_orders (
   luck_cycles_json jsonb,
   professional_view text,
   full_report text,
+  report_sections_json jsonb,
   contact_wechat text default 'guotingyuan258',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -25,6 +26,9 @@ create table if not exists public.manual_orders (
 create index if not exists manual_orders_report_code_idx on public.manual_orders (report_code);
 create index if not exists manual_orders_status_idx on public.manual_orders (status);
 create index if not exists manual_orders_created_at_idx on public.manual_orders (created_at desc);
+
+alter table public.manual_orders
+add column if not exists report_sections_json jsonb;
 
 alter table public.manual_orders enable row level security;
 
