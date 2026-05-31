@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { Card, PrimaryButton } from "@/components/ui";
@@ -37,7 +38,12 @@ export default function HomePage() {
   return (
     <div className="page-shell flex flex-col justify-center">
       <div className="mb-8">
-        <p className="mb-3 text-sm text-gold">东方命理 AI 咨询</p>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-sm text-gold">东方命理 AI 咨询</p>
+          <Link className="rounded-md border border-gold/20 px-3 py-2 text-xs text-gold" href="/en">
+            English Version
+          </Link>
+        </div>
         <h1 className="text-3xl font-semibold leading-tight text-[#fff7e8]">
           你想咨询什么？
         </h1>
